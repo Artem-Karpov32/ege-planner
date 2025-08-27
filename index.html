@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Генератор учебных планов для ЕГЭ</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Добавляем библиотеки для экспорта в PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <!-- Скрипт для перенаправления на GitHub Pages -->
+    <script>
+        // Перенаправление для SPA на GitHub Pages
+        (function(){
+            var redirect = sessionStorage.redirect;
+            delete sessionStorage.redirect;
+            if (redirect && redirect != location.href) {
+                history.replaceState(null, null, redirect);
+            }
+        })();
+    </script>
+</head>
+<body>
+    <!-- Стартовая страница с аутентификацией -->
+    <div id="authPage" class="auth-page active">
+        <header>
+            <div class="container">
+                <h1>Генератор учебных планов для подготовки к ЕГЭ</h1>
+                <p>Техническое направление: математика, физика, информатика</p>
+                <p class="author">Создал и разработал: Ученик МБОУ СОШ №9 г.Брянска Карпов Артём</p>
+            </div>
+        </header>
+
+        <main class="container">
+            <div class="auth-container">
+                <div class="auth-tabs">
+                    <button class="auth-tab active" data-tab="login">Вход</button>
+                    <button class="auth-tab" data-tab="register">Регистрация</button>
+                </div>
+
+                <div class="auth-content">
+                    <!-- Форма входа -->
+                    <form id="loginForm" class="auth-form active">
+                        <h2>Вход в систему</h2>
+                        <div class="form-group">
+                            <label for="loginUsername">Имя пользователя</label>
+                            <input type="text" id="loginUsername" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="loginPassword">Пароль</label>
+                            <input type="password" id="loginPassword" required>
+                        </div>
+                        <button type="submit" class="btn-auth">Войти</button>
+                        <p id="loginError" class="error-message"></p>
+                    </form>
+
+                    <!-- Форма регистрации -->
+                    <form id="registerForm" class="auth-form">
+                        <h2>Регистрация</h2>
+                        <div class="form-group">
+                            <label for="registerUsername">Имя пользователя</label>
+                            <input type="text" id="registerUsername" required>
+                            <small class="note">Имя пользователя должно быть уникальным</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="registerPassword">Пароль</label>
+                            <input type="password" id="registerPassword" required>
+                            <small class="note">Минимум 6 символов</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmPassword">Подтверждение пароля</label>
+                            <input type="password" id="confirmPassword" required>
+                        </div>
+                        <button type="submit" class="btn-auth">Зарегистрироваться</button>
+                        <p id="registerError" class="error-message"></p>
+                    </form>
+                </div>
+
+                <div id="savedPlanSection" class="saved-plan-section" style="display: none;">
+                    <div class="divider"></div>
+                    <h3>У вас есть сохраненный план</h3>
+                    <button id="loadPlanBtn" class="btn-load-plan">Перейти в мой индивидуальный план</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Основное приложение -->
+    <div id="appPage" class="app-page">
+        <header>
+            <div class="container">
+                <h1>Генератор учебных планов для подготовки к ЕГЭ</h1>
+                <p>Техническое направление: математика, физика, информатика</p>
+                <p class="author">Создал и разработал: Ученик МБОУ СОШ №9 г.Брянска Карпов Артём</p>
+                <div id="userGreeting" class="user-greeting"></div>
+            </div>
+        </header>
+
+        <main class="container">
+            <div class="progress-bar">
+                <div class="progress-step active" data-step="1" data-text="Предметы">1</div>
+                <div class="progress-step" data-step="2" data-text="Время">2</div>
+                <div class="progress-step" data-step="3" data-text="Распределение">3</div>
+                <div class="progress-step" data-step="4" data-text="Приоритеты">4</div>
+                <div class="progress-step" data-step="5" data-text="План">5</div>
+            </div>
+
+            <form id="planForm">
+                <!-- Шаг 1: Выбор предметов -->
+                <div class="form-step active" id="step1">
+                    <h2>Выберите предметы для подготовки</h2>
+                    <div class="subjects-container">
+                        <label class="subject-card">
+                            <input type="checkbox" name="subject" value="math">
+                            <span class="checkmark"></span>
+                            <h3>Математика (профиль)</h3>
+                            <p>Максимальный балл: 32</p>
+                        </label>
+                        <label class="subject-card">
+                            <input type="checkbox" name="subject" value="physics">
+                            <span class="checkmark"></span>
+                            <h3>Физика</h3>
+                            <p>Максимальный балл: 45</p>
+                        </label>
+                        <label class="subject-card">
+                            <input type="checkbox" name="subject" value="informatics">
+                            <span class="checkmark"></span>
+                            <h3>Информатика</h3>
+                            <p>Максимальный балл: 29</p>
+                        </label>
+                    </div>
+                    <div class="button-group">
+                        <button type="button" class="btn-next">Далее</button>
+                    </div>
+                </div>
+
+                <!-- Шаг 2: Время подготовки -->
+                <div class="form-step" id="step2">
+                    <h2>Параметры времени</h2>
+                    <div class="form-group">
+                        <label for="daysUntilExam">Количество дней до экзамена:</label>
+                        <input type="number" id="daysUntilExam" name="daysUntilExam" min="1" required>
+                        <small class="note">Рекомендуется планировать минимум за 2 месяца (60 дней)</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="dailyTime">Свободное время в день (часов):</label>
+                        <input type="number" id="dailyTime" name="dailyTime" min="1" max="24" step="0.5" required>
+                        <small class="note">Учитывайте реалистичное количество времени</small>
+                    </div>
+                    <div class="button-group">
+                        <button type="button" class="btn-prev">Назад</button>
+                        <button type="button" class="btn-next">Далее</button>
+                    </div>
+                </div>
+
+                <!-- Шаг 3: Распределение по дням -->
+                <div class="form-step" id="step3">
+                    <h2>Распределение занятий по дням</h2>
+                    <p>Выберите две опции: одну из первых трёх и обязательно четвёртый пункт</p>
+
+                    <div class="distribution-options">
+                        <div class="option-group">
+                            <h3>Режим занятий (выберите один):</h3>
+                            <label>
+                                <input type="radio" name="studyMode" value="daily" data-group="mode">
+                                Ежедневно заниматься всеми выбранными предметами
+                            </label>
+                            <label>
+                                <input type="radio" name="studyMode" value="alternate" data-group="mode">
+                                Чередовать предметы по дням
+                            </label>
+                            <label>
+                                <input type="radio" name="studyMode" value="twiceWeek" data-group="mode">
+                                Заниматься по каждому предмету два дня в неделю
+                            </label>
+                        </div>
+
+                        <div class="option-group">
+                            <h3>Выходные дни (обязательно):</h3>
+                            <label>
+                                <input type="checkbox" name="noWeekends" value="true" data-group="weekends">
+                                Не заниматься по выходным
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="button" class="btn-prev">Назад</button>
+                        <button type="button" class="btn-next">Далее</button>
+                    </div>
+                </div>
+
+                <!-- Шаг 4: Приоритеты -->
+                <div class="form-step" id="step4">
+                    <h2>Расстановка приоритетов</h2>
+                    <p>Выберите предметы, на которые хотите сделать упор (необязательно)</p>
+
+                    <div id="prioritySubjects" class="priority-container">
+                        <!-- Динамически генерируется на основе выбранных предметов -->
+                    </div>
+
+                    <div class="button-group">
+                        <button type="button" class="btn-prev">Назад</button>
+                        <button type="button" class="btn-next">Сгенерировать план</button>
+                    </div>
+                </div>
+
+                <!-- Шаг 5: Результат -->
+                <div class="form-step" id="step5">
+                    <h2>Ваш персональный учебный план</h2>
+
+                    <div class="plan-summary">
+                        <div class="summary-card">
+                            <h3>Общая информация</h3>
+                            <p id="summaryText"></p>
+                        </div>
+
+                        <div class="summary-card">
+                            <h3>Прогнозируемые баллы</h3>
+                            <div id="scorePrediction"></div>
+                        </div>
+                    </div>
+
+                    <div class="tabs">
+                        <button type="button" class="tab-btn active" data-tab="calendar">Календарь занятий</button>
+                        <button type="button" class="tab-btn" data-tab="details">Детали по предметам</button>
+                    </div>
+
+                    <div class="tab-content active" id="calendarTab">
+                        <div id="calendarView"></div>
+                        <div class="export-buttons">
+                            <button type="button" class="btn-print" id="printCalendarBtn">Печать календаря</button>
+                            <button type="button" class="btn-pdf" id="exportCalendarPdfBtn">Экспорт календаря в PDF</button>
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="detailsTab">
+                        <div id="subjectsDetails"></div>
+                        <div class="export-buttons">
+                            <button type="button" class="btn-print" id="printDetailsBtn">Печать тем для изучения</button>
+                            <button type="button" class="btn-pdf" id="exportDetailsPdfBtn">Экспорт тем в PDF</button>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="button" class="btn-prev">Назад к редактированию</button>
+                        <button type="button" id="savePlanBtn">Сохранить план</button>
+                        <button type="button" id="exportBtn">Экспортировать план (TXT)</button>
+                        <button type="button" id="newPlanBtn" class="btn-new-plan">Составить новый план</button>
+                    </div>
+                    <p class="save-note">Нажимая кнопку "Сохранить план", вы сохраняете план на сайте</p>
+                </div>
+            </form>
+        </main>
+
+        <footer>
+            <div class="container">
+                <p>Генератор учебных планов для подготовки к ЕГЭ © 2026</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="data/subjects-data.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/script.js"></script>
+</body>
+</html>
