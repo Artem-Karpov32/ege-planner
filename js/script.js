@@ -53,10 +53,14 @@ function initApp() {
     exportBtn.addEventListener('click', exportPlan);
     
     // Обработчик для сохранения плана
-    savePlanBtn.addEventListener('click', () => {
+    savePlanBtn.addEventListener('click', async () => { // Добавили async
         if (window.currentPlan) {
-            savePlan(window.currentPlan);
-            alert('План успешно сохранен!');
+            try {
+                await savePlan(window.currentPlan); // Добавили await
+                alert('План успешно сохранен в облаке!');
+            } catch (error) {
+                alert('Ошибка при сохранении плана: ' + error.message);
+            }
         } else {
             alert('Сначала создайте план');
         }

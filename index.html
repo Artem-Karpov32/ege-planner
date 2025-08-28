@@ -44,8 +44,8 @@
                     <form id="loginForm" class="auth-form active">
                         <h2>Вход в систему</h2>
                         <div class="form-group">
-                            <label for="loginUsername">Имя пользователя</label>
-                            <input type="text" id="loginUsername" required>
+                            <label for="loginEmail">Email</label>
+                            <input type="email" id="loginEmail" required>
                         </div>
                         <div class="form-group">
                             <label for="loginPassword">Пароль</label>
@@ -59,9 +59,9 @@
                     <form id="registerForm" class="auth-form">
                         <h2>Регистрация</h2>
                         <div class="form-group">
-                            <label for="registerUsername">Имя пользователя</label>
-                            <input type="text" id="registerUsername" required>
-                            <small class="note">Имя пользователя должно быть уникальным</small>
+                            <label for="registerEmail">Email</label>
+                            <input type="email" id="registerEmail" required>
+                            <small class="note">Email будет использоваться для входа</small>
                         </div>
                         <div class="form-group">
                             <label for="registerPassword">Пароль</label>
@@ -261,6 +261,15 @@
         </footer>
     </div>
 
+    <!-- Библиотеки Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <!-- Конфигурация Firebase -->
+    <script src="js/firebase-config.js"></script> <!-- <- Новый файл -->
+
+    <!-- Мои скрипты -->
     <script src="data/subjects-data.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/script.js"></script>
