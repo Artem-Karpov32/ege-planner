@@ -1,12 +1,26 @@
 // Firebase Auth Manager
 class AuthManager {
     constructor() {
+        // Ждем загрузки Firebase перед инициализацией
+        if (typeof firebase === 'undefined') {
+            console.error('Firebase не загружен!');
+            return;
+        }
+        
         this.currentUser = null;
         this.userData = null;
-        this.init();
+        
+        // Небольшая задержка для гарантии загрузки Firebase
+        setTimeout(() => this.init(), 100);
     }
 
     init() {
+        // Проверяем, инициализирован ли Firebase
+        if (!firebase.apps.length) {
+            console.error('Firebase не инициализирован!');
+            return;
+        }
+
         // Инициализация вкладки аутентификации
         this.initAuthTabs();
 
