@@ -10,6 +10,53 @@ let userData = {
 
 let currentStep = 0;
 
+// Функция для полного сброса приложения 
+function resetApp() {
+    // Сбрасываем глобальные переменные
+    userData = {
+        subjects: [],
+        daysUntilExam: 0,
+        dailyTime: 0,
+        studyMode: '',
+        noWeekends: false,
+        priorities: {}
+    };
+    
+    window.currentPlan = null;
+    currentStep = 0;
+    
+    // Сбрасываем форму
+    document.querySelectorAll('input[name="subject"]').forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    
+    document.getElementById('daysUntilExam').value = '';
+    document.getElementById('dailyTime').value = '';
+    
+    document.querySelectorAll('input[name="studyMode"]').forEach(radio => {
+        radio.checked = false;
+    });
+    
+    document.querySelector('input[name="noWeekends"]').checked = false;
+    
+    // Переход к первому шагу
+    const formSteps = document.querySelectorAll('.form-step');
+    formSteps.forEach(step => step.classList.remove('active'));
+    formSteps[0].classList.add('active');
+    
+    // Обновляем прогресс-бар
+    updateProgressBar();
+    
+    // Очищаем результаты
+    document.getElementById('calendarView').innerHTML = '';
+    document.getElementById('subjectsDetails').innerHTML = '';
+    document.getElementById('summaryText').innerHTML = '';
+    document.getElementById('scorePrediction').innerHTML = '';
+}
+
+// Делаем функцию доступной глобально
+window.resetApp = resetApp;
+
 // Функция инициализации приложения
 function initApp() {
     // Элементы DOM
@@ -1119,6 +1166,12 @@ function exportDetailsToPdf() {
 // Функция для загрузки сохраненного плана
 async function loadPlan(planData) {
     try {
+        // Проверяем, что planData существует и содержит необходимые данные
+        if (!planData || !planData.userData) {
+            console.log("План не найден или данные повреждены");
+            return;
+        }
+
         // Заполняем данные пользователя
         userData = planData.userData;
         
@@ -1128,12 +1181,20 @@ async function loadPlan(planData) {
         });
         
         // Восстанавливаем другие поля
-        document.getElementById('daysUntilExam').value = userData.daysUntilExam;
-        document.getElementById('dailyTime').value = userData.dailyTime;
+        if (userData.daysUntilExam) {
+            document.getElementById('daysUntilExam').value = userData.daysUntilExam;
+        }
+        
+        if (userData.dailyTime) {
+            document.getElementById('dailyTime').value = userData.dailyTime;
+        }
         
         // Восстанавливаем режим занятий
         if (userData.studyMode) {
-            document.querySelector(`input[name="studyMode"][value="${userData.studyMode}"]`).checked = true;
+            const radio = document.querySelector(`input[name="studyMode"][value="${userData.studyMode}"]`);
+            if (radio) {
+                radio.checked = true;
+            }
         }
         
         if (userData.noWeekends !== undefined) {
@@ -1159,7 +1220,7 @@ async function loadPlan(planData) {
         
     } catch (error) {
         console.error("Ошибка загрузки плана:", error);
-        alert("Не удалось загрузить сохраненный план");
+        // Не показываем alert, так как это может быть просто отсутствие плана
     }
 }
 

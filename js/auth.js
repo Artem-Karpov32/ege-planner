@@ -100,9 +100,9 @@ class AuthManager {
         }
     }
 
-    async handleRegister(e) {
+   async handleRegister(e) {
         e.preventDefault();
-        const email = document.getElementById('registerEmail').value; // ! Изменили ID на registerEmail
+        const email = document.getElementById('registerEmail').value;
         const password = document.getElementById('registerPassword').value;
         const confirmPassword = document.getElementById('confirmPassword').value;
         const errorElement = document.getElementById('registerError');
@@ -117,21 +117,27 @@ class AuthManager {
         }
 
         try {
+            // Сбрасываем данные перед регистрацией нового пользователя
+            if (typeof window.resetApp === 'function') {
+                window.resetApp();
+            }
+
             // 1. Создаем пользователя в Firebase Auth
             const userCredential = await auth.createUserWithEmailAndPassword(email, password);
             // 2. Создаем запись о пользователе в базе данных Firestore
             await db.collection('users').doc(userCredential.user.uid).set({
                 email: email,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(), // Ставим метку времени
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                 plan: null // Изначально плана нет
             });
+        
             errorElement.textContent = '';
         } catch (error) {
             errorElement.textContent = this.getAuthErrorMessage(error.code);
         }
-    }
+   }
 
-    async loadUserData() {
+   async loadUserData() {
         if (!this.currentUser) return;
         try {
             const userDoc = await db.collection('users').doc(this.currentUser.uid).get();
@@ -145,10 +151,15 @@ class AuthManager {
                     this.showAppPage();
                 
                     // Затем загружаем план
-                    this.loadSavedPlan();
+                    await this.loadSavedPlan();
                 } else {
                     // Если плана нет - просто показываем главную страницу
                     this.showAppPage();
+                
+                    // Сбрасываем форму для нового пользователя
+                    if (typeof window.resetApp === 'function') {
+                        window.resetApp();
+                    }
                 }
             }
         } catch (error) {
@@ -157,13 +168,18 @@ class AuthManager {
         }
     }
 
-    async logout() {
-        try {
+   async logout() {
+       try {
+            // Сбрасываем данные приложения
+            if (typeof window.resetApp === 'function') {
+                window.resetApp();
+            }
+
             await auth.signOut();
         } catch (error) {
             console.error("Ошибка выхода:", error);
         }
-    }
+   }
 
     showAuthPage() {
         document.getElementById('authPage').classList.add('active');
@@ -235,9 +251,16 @@ class AuthManager {
             } catch (error) {
                 console.error("Ошибка загрузки плана:", error);
                 document.getElementById('appPage').style.opacity = '1';
+                // Не показываем alert, так как это может быть просто отсутствие плана
+            }
+        } else {
+            // Если плана нет, просто скрываем секцию
+            const savedPlanSection = document.getElementById('savedPlanSection');
+            if (savedPlanSection) {
+                savedPlanSection.style.display = 'none';
             }
         }
-    }   
+    }
 
     getAuthErrorMessage(errorCode) {
         switch (errorCode) {
