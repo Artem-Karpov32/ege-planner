@@ -164,7 +164,7 @@ class AuthManager {
     showSavedPlanSection() {
         const savedPlanSection = document.getElementById('savedPlanSection');
         if (savedPlanSection) {
-            savedPlanSection.style.display =block';
+            savedPlanSection.style.display = 'block';
         }
     }
 
