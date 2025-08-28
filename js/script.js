@@ -53,11 +53,20 @@ function initApp() {
     exportBtn.addEventListener('click', exportPlan);
     
     // Обработчик для сохранения плана
-    savePlanBtn.addEventListener('click', async () => { // Добавили async
+    savePlanBtn.addEventListener('click', async () => {
         if (window.currentPlan) {
             try {
-                await savePlan(window.currentPlan); // Добавили await
+                // Добавляем метку времени к плану
+                window.currentPlan.savedAt = new Date().toISOString();
+            
+                await savePlan(window.currentPlan);
                 alert('План успешно сохранен в облаке!');
+            
+                // Прячем кнопку загрузки плана, так как теперь план загружается автоматически
+                const savedPlanSection = document.getElementById('savedPlanSection');
+                if (savedPlanSection) {
+                    savedPlanSection.style.display = 'none';
+                }
             } catch (error) {
                 alert('Ошибка при сохранении плана: ' + error.message);
             }
@@ -579,6 +588,11 @@ function predictScores(timeAllocation) {
 
 // Генерация плана
 function generatePlan() {
+    // Если план уже был сгенерирован и сохранен, используем его данные
+    if (window.currentPlan && window.currentPlan.generatedAt) {
+        displayResults(window.currentPlan.schedule, window.currentPlan.scorePredictions);
+        return;
+    }
     // 1. Расчет общего доступного времени
     const totalAvailableTime = calculateTotalAvailableTime();
     
@@ -1103,41 +1117,50 @@ function exportDetailsToPdf() {
 }
 
 // Функция для загрузки сохраненного плана
-function loadPlan(planData) {
-    // Заполняем данные пользователя
-    userData = planData.userData;
-    
-    // Восстанавливаем выбор предметов
-    document.querySelectorAll('input[name="subject"]').forEach(checkbox => {
-        checkbox.checked = userData.subjects.includes(checkbox.value);
-    });
-    
-    // Восстанавливаем другие поля
-    document.getElementById('daysUntilExam').value = userData.daysUntilExam;
-    document.getElementById('dailyTime').value = userData.dailyTime;
-    
-    // Восстанавливаем режим занятий
-    document.querySelector(`input[name="studyMode"][value="${userData.studyMode}"]`).checked = true;
-    document.querySelector('input[name="noWeekends"]').checked = userData.noWeekends;
-    
-    // Переходим к последнему шагу
-    currentStep = 4;
-    updateProgressBar();
-    
-    // Показываем шаг с результатами
-    const formSteps = document.querySelectorAll('.form-step');
-    formSteps.forEach((step, index) => {
-        step.classList.remove('active');
-        if (index === currentStep) {
-            step.classList.add('active');
+async function loadPlan(planData) {
+    try {
+        // Заполняем данные пользователя
+        userData = planData.userData;
+        
+        // Восстанавливаем выбор предметов
+        document.querySelectorAll('input[name="subject"]').forEach(checkbox => {
+            checkbox.checked = userData.subjects.includes(checkbox.value);
+        });
+        
+        // Восстанавливаем другие поля
+        document.getElementById('daysUntilExam').value = userData.daysUntilExam;
+        document.getElementById('dailyTime').value = userData.dailyTime;
+        
+        // Восстанавливаем режим занятий
+        if (userData.studyMode) {
+            document.querySelector(`input[name="studyMode"][value="${userData.studyMode}"]`).checked = true;
         }
-    });
-    
-    // Отображаем результаты
-    displayResults(planData.schedule, planData.scorePredictions);
-    
-    // Сохраняем текущий план
-    window.currentPlan = planData;
+        
+        if (userData.noWeekends !== undefined) {
+            document.querySelector('input[name="noWeekends"]').checked = userData.noWeekends;
+        }
+        
+        // Переходим сразу к шагу с планом
+        const formSteps = document.querySelectorAll('.form-step');
+        formSteps.forEach(step => step.classList.remove('active'));
+        
+        // Показываем шаг с результатами
+        document.getElementById('step5').classList.add('active');
+        
+        // Обновляем прогресс-бар
+        currentStep = 4;
+        updateProgressBar();
+        
+        // Генерируем и отображаем план
+        generatePlan();
+        
+        // Сохраняем текущий план
+        window.currentPlan = planData;
+        
+    } catch (error) {
+        console.error("Ошибка загрузки плана:", error);
+        alert("Не удалось загрузить сохраненный план");
+    }
 }
 
 // Инициализация при загрузке страницы

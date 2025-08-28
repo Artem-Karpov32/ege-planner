@@ -134,22 +134,26 @@ class AuthManager {
     async loadUserData() {
         if (!this.currentUser) return;
         try {
-            // Получаем документ с данными пользователя из коллекции 'users'
-            // docID равен uid пользователя (это уникальный id, который присваивает Firebase Auth)
             const userDoc = await db.collection('users').doc(this.currentUser.uid).get();
 
             if (userDoc.exists) {
-                // Сохраняем данные в память
                 this.userData = userDoc.data();
-                this.showAppPage();
-
-                // Показываем кнопку "Загрузить план", если план уже есть
+            
+                // Если есть сохраненный план - сразу загружаем его
                 if (this.userData.plan) {
-                    this.showSavedPlanSection();
+                    // Сначала показываем главную страницу
+                    this.showAppPage();
+                
+                    // Затем загружаем план
+                    this.loadSavedPlan();
+                } else {
+                    // Если плана нет - просто показываем главную страницу
+                    this.showAppPage();
                 }
             }
         } catch (error) {
             console.error("Ошибка загрузки данных пользователя:", error);
+            this.showAppPage();
         }
     }
 
@@ -211,11 +215,29 @@ class AuthManager {
 
     async loadSavedPlan() {
         if (this.userData && this.userData.plan) {
-            if (typeof loadPlan === 'function') {
-                loadPlan(this.userData.plan);
+            try {
+                // Показываем индикатор загрузки
+                document.getElementById('appPage').style.opacity = '0.5';
+            
+                // Даем время на рендеринг изменений
+                setTimeout(async () => {
+                    if (typeof window.loadPlan === 'function') {
+                        await window.loadPlan(this.userData.plan);
+                    
+                        // Прячем секцию с кнопкой загрузки плана
+                        const savedPlanSection = document.getElementById('savedPlanSection');
+                        if (savedPlanSection) {
+                            savedPlanSection.style.display = 'none';
+                        }
+                    }
+                    document.getElementById('appPage').style.opacity = '1';
+                }, 100);
+            } catch (error) {
+                console.error("Ошибка загрузки плана:", error);
+                document.getElementById('appPage').style.opacity = '1';
             }
         }
-    }
+    }   
 
     getAuthErrorMessage(errorCode) {
         switch (errorCode) {
