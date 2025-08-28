@@ -52,6 +52,13 @@ function resetApp() {
     document.getElementById('subjectsDetails').innerHTML = '';
     document.getElementById('summaryText').innerHTML = '';
     document.getElementById('scorePrediction').innerHTML = '';
+    
+    // Сбрасываем активные вкладки
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    
+    document.querySelector('.tab-btn[data-tab="calendar"]').classList.add('active');
+    document.getElementById('calendarTab').classList.add('active');
 }
 
 // Делаем функцию доступной глобально
@@ -68,6 +75,9 @@ function initApp() {
     const exportBtn = document.getElementById('exportBtn');
     const savePlanBtn = document.getElementById('savePlanBtn');
     const newPlanBtn = document.getElementById('newPlanBtn');
+    
+    // Обработчик для сохранения плана
+    setupSavePlanHandler();
     
     // Инициализация прогресс-бара
     updateProgressBar();
@@ -99,28 +109,50 @@ function initApp() {
     // Обработчик для экспорта
     exportBtn.addEventListener('click', exportPlan);
     
-   // Обработчик для сохранения плана
-    savePlanBtn.addEventListener('click', async () => {
-        if (window.currentPlan) {
-            try {
-                // Добавляем метку времени к плану
-                window.currentPlan.savedAt = new Date().toISOString();
-            
-                await savePlan(window.currentPlan);
-                alert('План успешно сохранен в облаке!');
-            
-                // Прячем кнопку загрузки плана, так как теперь план загружается автоматически
-                const savedPlanSection = document.getElementById('savedPlanSection');
-                if (savedPlanSection) {
-                    savedPlanSection.style.display = 'none';
+    // Обработчик для сохранения плана
+    function setupSavePlanHandler() {
+        const savePlanBtn = document.getElementById('savePlanBtn');
+    
+        // Удаляем предыдущие обработчики
+        savePlanBtn.replaceWith(savePlanBtn.cloneNode(true));
+    
+        // Получаем новую ссылку на кнопку
+        const newSavePlanBtn = document.getElementById('savePlanBtn');
+    
+        // Добавляем обработчик
+        newSavePlanBtn.addEventListener('click', async () => {
+            if (window.currentPlan) {
+                try {
+                    // Добавляем метку времени к плану
+                    window.currentPlan.savedAt = new Date().toISOString();
+                
+                    await savePlan(window.currentPlan);
+                    alert('План успешно сохранен в облаке!');
+                
+                    // Прячем кнопку загрузки плана
+                    const savedPlanSection = document.getElementById('savedPlanSection');
+                    if (savedPlanSection) {
+                        savedPlanSection.style.display = 'none';
+                    }
+                
+                    // Делаем кнопку неактивной на 3 секунды, чтобы предотвратить множественные нажатия
+                    newSavePlanBtn.disabled = true;
+                    setTimeout(() => {
+                        newSavePlanBtn.disabled = false;
+                    }, 3000);
+                
+                } catch (error) {
+                    alert('Ошибка при сохранении плана: ' + error.message);
                 }
-            } catch (error) {
-                alert('Ошибка при сохранении плана: ' + error.message);
+            } else {
+                alert('Сначала создайте план');
             }
-        } else {
-            alert('Сначала создайте план');
-        }
-    });
+        });
+    }
+
+    // В функции initApp заменим обработчик
+    // Обработчик для сохранения плана
+    setupSavePlanHandler();
     
     // Обработчик для создания нового плана
     newPlanBtn.addEventListener('click', () => {
@@ -656,11 +688,17 @@ function generatePlan() {
     // 5. Отображение результатов
     displayResults(schedule, scorePredictions);
     
+    // 6. Сохраняем HTML-содержимое вкладок
+    const calendarHtml = document.getElementById('calendarView').innerHTML;
+    const detailsHtml = document.getElementById('subjectsDetails').innerHTML;
+    
     // Сохраняем данные плана для возможного сохранения
     const planData = {
         userData: userData,
         schedule: schedule,
         scorePredictions: scorePredictions,
+        calendarHtml: calendarHtml,
+        detailsHtml: detailsHtml,
         generatedAt: new Date().toISOString()
     };
     
@@ -1213,14 +1251,31 @@ async function loadPlan(planData) {
         currentStep = 4;
         updateProgressBar();
         
-        // Вместо генерации плана, отображаем сохраненные данные
+        // Восстанавливаем HTML-содержимое вкладок
+        if (planData.calendarHtml) {
+            document.getElementById('calendarView').innerHTML = planData.calendarHtml;
+        }
+        
+        if (planData.detailsHtml) {
+            document.getElementById('subjectsDetails').innerHTML = planData.detailsHtml;
+        }
+        
+        // Отображаем сохраненные данные
         if (planData.schedule && planData.scorePredictions) {
-            displayResults(planData.schedule, planData.scorePredictions);
+            displaySummaryInfo(planData.schedule);
+            displayScorePredictions(planData.scorePredictions);
         } else {
             // Если нет расписания и прогнозов, значит план неполный
             document.getElementById('summaryText').innerHTML = 
                 '<p>Сохраненный план имеет неполные данные. Нажмите "Назад к редактированию" и затем "Сгенерировать план" для создания нового плана.</p>';
         }
+        
+        // Активируем первую вкладку
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        
+        document.querySelector('.tab-btn[data-tab="calendar"]').classList.add('active');
+        document.getElementById('calendarTab').classList.add('active');
         
         // Сохраняем текущий план
         window.currentPlan = planData;
