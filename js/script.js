@@ -99,7 +99,7 @@ function initApp() {
     // Обработчик для экспорта
     exportBtn.addEventListener('click', exportPlan);
     
-    // Обработчик для сохранения плана
+   // Обработчик для сохранения плана
     savePlanBtn.addEventListener('click', async () => {
         if (window.currentPlan) {
             try {
@@ -635,11 +635,12 @@ function predictScores(timeAllocation) {
 
 // Генерация плана
 function generatePlan() {
-    // Если план уже был сгенерирован и сохранен, используем его данные
-    if (window.currentPlan && window.currentPlan.generatedAt) {
+    // Если план уже был сгенерирован и есть расписание и прогнозы, используем их
+    if (window.currentPlan && window.currentPlan.schedule && window.currentPlan.scorePredictions) {
         displayResults(window.currentPlan.schedule, window.currentPlan.scorePredictions);
         return;
     }
+    
     // 1. Расчет общего доступного времени
     const totalAvailableTime = calculateTotalAvailableTime();
     
@@ -1212,15 +1213,20 @@ async function loadPlan(planData) {
         currentStep = 4;
         updateProgressBar();
         
-        // Генерируем и отображаем план
-        generatePlan();
+        // Вместо генерации плана, отображаем сохраненные данные
+        if (planData.schedule && planData.scorePredictions) {
+            displayResults(planData.schedule, planData.scorePredictions);
+        } else {
+            // Если нет расписания и прогнозов, значит план неполный
+            document.getElementById('summaryText').innerHTML = 
+                '<p>Сохраненный план имеет неполные данные. Нажмите "Назад к редактированию" и затем "Сгенерировать план" для создания нового плана.</p>';
+        }
         
         // Сохраняем текущий план
         window.currentPlan = planData;
         
     } catch (error) {
         console.error("Ошибка загрузки плана:", error);
-        // Не показываем alert, так как это может быть просто отсутствие плана
     }
 }
 

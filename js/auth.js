@@ -223,9 +223,10 @@ class AuthManager {
                 plan: planData,
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             });
-            console.log("План успешно сохранен в Firebase!");
+            console.log("План успешно сохранен!");
         } catch (error) {
             console.error("Ошибка сохранения плана:", error);
+            throw error; // Пробрасываем ошибку для обработки в вызывающем коде
         }
     }
 
