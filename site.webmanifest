@@ -1,11 +1,6 @@
 {
     "name": "Генератор учебных планов для ЕГЭ",
-    "short_name": "ЕГЭ Планировщик",
-    "description": "Создание индивидуальных планов подготовки к ЕГЭ по техническим предметам",
-    "start_url": "/",
-    "display": "standalone",
-    "background_color": "#4361ee",
-    "theme_color": "#4361ee",
+    "short_name": "Планы ЕГЭ",
     "icons": [
         {
             "src": "icon-192.png",
@@ -17,5 +12,8 @@
             "sizes": "512x512",
             "type": "image/png"
         }
-    ]
+    ],
+    "theme_color": "#ffffff",
+    "background_color": "#ffffff",
+    "display": "standalone"
 }
