@@ -291,3 +291,15 @@ function loadPlan(planData) {
         window.loadPlan(planData);
     }
 }
+
+// Функция для входа по кастомному токену (будет вызываться из Android)
+window.signInWithCustomToken = function(token) {
+    return auth.signInWithCustomToken(token).then((userCredential) => {
+        // Успешный вход
+        console.log("Успешный вход через кастомный токен");
+        return userCredential;
+    }).catch((error) => {
+        console.error("Ошибка входа по кастомному токену:", error);
+        throw error;
+    });
+};

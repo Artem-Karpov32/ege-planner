@@ -10,6 +10,60 @@ let userData = {
 
 let currentStep = 0;
 
+// Проверяем, находимся ли мы в Android-приложении
+function isInAndroidApp() {
+    return typeof AndroidAppInterface !== 'undefined';
+}
+
+// Если мы в приложении, пытаемся автоматически войти
+if (isInAndroidApp()) {
+    console.log("Обнаружено Android-приложение, производится вход...");
+
+    // Создаем callback для Android
+    const callback = {
+        onResult: function(token) {
+            console.log("Received custom token from Android:", token);
+            // Используем полученный токен для входа в Firebase
+            window.signInWithCustomToken(token).then(() => {
+                console.log("WebView signed in successfully via Android");
+                // После входа onAuthStateChanged автоматически вызовет loadUserData и showAppPage
+            }).catch(error => {
+                console.error("Failed to sign in with custom token", error);
+                // Показываем стандартную страницу входа
+                if (typeof authManager !== 'undefined' && authManager.showAuthPage) {
+                    authManager.showAuthPage();
+                }
+            });
+        },
+        onError: function(error) {
+            console.error("Failed to get token from Android:", error);
+            if (typeof authManager !== 'undefined' && authManager.showAuthPage) {
+                authManager.showAuthPage();
+            }
+        }
+    };
+
+    // Вызываем нативный метод
+    try {
+        AndroidAppInterface.getFirebaseCustomToken(callback);
+    } catch (e) {
+        console.error("Error calling Android interface:", e);
+        if (typeof authManager !== 'undefined' && authManager.showAuthPage) {
+            authManager.showAuthPage();
+        }
+    }
+} else {
+    // Стандартное поведение для веба
+    document.addEventListener('DOMContentLoaded', function() {
+        if (document.getElementById('authPage').classList.contains('active')) {
+            // Инициализация аутентификации уже выполнена в auth.js
+            // Основное приложение будет инициализировано после входа
+        } else {
+            initApp();
+        }
+    });
+}
+
 // Функция для полного сброса приложения 
 function resetApp() {
     // Сбрасываем глобальные переменные
